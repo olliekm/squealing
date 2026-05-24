@@ -1,46 +1,24 @@
-from ollama import chat, Client, ChatResponse
-from sqlalchemy import create_engine, text
-import re
+import argparse
+from chatting import question
 
-engine = create_engine("sqlite:///mydb.db")
+def print_hi():
+    print("hi")
 
-system_prompt = f"""You are a SQL expert. Given the following schema, write a SQLite query.
+def main():
 
-SCHEMA:
+    parser = argparse.ArgumentParser(
+                        prog='sqling',
+                        description='interact with your data with natural language',
+                        epilog='YAHOO')    # Add a positional argument
+    FUNCTION_MAP = {'question' : question,
+                    'open' : print_hi }
 
-Return only the SQL query, nothing else."""
+    parser.add_argument('run', choices=FUNCTION_MAP.keys())
 
+    args = parser.parse_args()
 
-client = Client()
-
-def run_query(engine, sql):
-    with engine.connect() as conn:
-        result = conn.execute(text(sql))
-        return result.fetchall()
-
-def clean_response(raw):
-    match = re.search(r"```(?:sql)?\n?(.*?)```", raw, re.DOTALL)
-    return match.group(1).strip() if match else raw.strip()
-
-
-def question(user_query):
-    response = client.chat(model='qwen2.5-coder:7b', messages=[
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_query},
-    ])
-    
-    cleaned_response = clean_response(response["message"]["content"])
-
-    try:
-        return run_query(cleaned_response)
-    except:
-        return "sorry this didnt work"
-
-
-
-
-# print(response['message']['content'])
+    func = FUNCTION_MAP[args.run]
+    func()
 
 if __name__ == "__main__":
-    query = input("Input here: ")
-    print(question(query))
+    main()
