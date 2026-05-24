@@ -37,7 +37,6 @@ def question(user_query):
         return "sorry this didnt work"
 
 
-    
 
 
 # print(response['message']['content'])
